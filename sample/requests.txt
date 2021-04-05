@@ -1,0 +1,20 @@
+/signup
+curl -X POST localhost:1323/signup -d "userid=test3&password=test2"
+
+/login
+curl -X POST localhost:1323/login -d "userid=test&password=test2"
+
+로그인 이후 요청예
+curl localhost:1323/test -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOiJ0ZXN0IiwiZXhwIjoxNjEzODQ0ODEwfQ.cdrlChnDuSOtrkd7gF6sUG-3icP90fXNAA4GRk886HM"
+
+GET /todo
+todo_query.json 참조
+
+PUT /todo
+todo_insert.json 참조
+
+PATCH /todo
+todo_update.json 참조
+
+DELETE /todo
+todo_delete.json 참조
