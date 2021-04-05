@@ -1,4 +1,4 @@
-# smartmidea-todo# Todo List API
+# smartmedia-todo# Todo List API
 
 
 
