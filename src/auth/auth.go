@@ -143,6 +143,15 @@ func Login(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	mysqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+
+	mysqlDB.SetMaxIdleConns(10)
+	mysqlDB.SetMaxOpenConns(100)
+	mysqlDB.SetConnMaxLifetime(time.Hour)
+
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&User{})
 
 	var checkUser User
@@ -185,6 +194,15 @@ func SignUp(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	mysqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	mysqlDB.SetMaxIdleConns(10)
+	mysqlDB.SetMaxOpenConns(100)
+	mysqlDB.SetConnMaxLifetime(time.Hour)
+
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&(User{}))
 
 	user := &User{

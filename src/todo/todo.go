@@ -38,6 +38,13 @@ func CreateTodos(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	mysqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	mysqlDB.SetMaxIdleConns(10)
+	mysqlDB.SetMaxOpenConns(100)
+	mysqlDB.SetConnMaxLifetime(time.Hour)
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
 
 	for i, _ := range request.TodoList {
@@ -68,6 +75,13 @@ func UpdateTodos(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	mysqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	mysqlDB.SetMaxIdleConns(10)
+	mysqlDB.SetMaxOpenConns(100)
+	mysqlDB.SetConnMaxLifetime(time.Hour)
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
 
 	for i, _ := range request.TodoList {
@@ -91,6 +105,13 @@ func DeleteTodos(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	mysqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	mysqlDB.SetMaxIdleConns(10)
+	mysqlDB.SetMaxOpenConns(100)
+	mysqlDB.SetConnMaxLifetime(time.Hour)
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
 
 	for i, _ := range request.TodoList {
@@ -117,6 +138,13 @@ func QueryTodos(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	mysqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	mysqlDB.SetMaxIdleConns(10)
+	mysqlDB.SetMaxOpenConns(100)
+	mysqlDB.SetConnMaxLifetime(time.Hour)
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
 
 	var todoList []Todo
