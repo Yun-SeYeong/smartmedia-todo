@@ -1,6 +1,8 @@
 package main
 
 import (
+	"html/template"
+	"io"
 	"net/http"
 	"todo/src/auth"
 	"todo/src/todo"
@@ -8,6 +10,14 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
+
+type TemplateRenderer struct {
+	templates *template.Template
+}
+
+func (t *TemplateRenderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
+}
 
 func main() {
 	e := echo.New()
@@ -20,6 +30,13 @@ func main() {
 
 	//Login
 	e.POST("/login", auth.Login)
+
+	e.Renderer = &TemplateRenderer{
+		templates: template.Must(template.ParseGlob("*.html")),
+	}
+
+	e.GET("/login/google", auth.GoogleLogin)
+	e.GET("/login/google/callback", auth.GoogleLoginCallback)
 
 	//SignUp
 	e.POST("/signup", auth.SignUp)
@@ -38,6 +55,9 @@ func main() {
 		root.GET("/test", func(c echo.Context) error {
 			return c.String(http.StatusOK, "Hello "+c.QueryParam("userid"))
 		})
+
+		root.GET("/signup/google", auth.GoogleSignup)
+		root.GET("/signup/google/callback", auth.GoogleSignUpCallback)
 
 		root.GET("/todo", todo.QueryTodos)
 
