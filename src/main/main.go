@@ -28,6 +28,8 @@ func main() {
 	//Recover Middleware
 	e.Use(middleware.Recover())
 
+	e.Use(middleware.CORS())
+
 	//Login
 	e.POST("/login", auth.Login)
 
