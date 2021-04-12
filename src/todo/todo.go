@@ -1,6 +1,7 @@
 package todo
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 	"todo/src/setting"
@@ -49,7 +50,9 @@ func CreateTodos(c echo.Context) error {
 		return c.String(http.StatusOK, result.Error.Error())
 	}
 
-	return c.String(http.StatusOK, "created")
+	resultJson, _ := json.Marshal(request.TodoList)
+
+	return c.String(http.StatusOK, string(resultJson))
 }
 
 func UpdateTodos(c echo.Context) error {
