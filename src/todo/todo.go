@@ -42,9 +42,12 @@ func CreateTodos(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	mysqlDB.SetMaxIdleConns(10)
-	mysqlDB.SetMaxOpenConns(100)
+	defer mysqlDB.Close()
+
+	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
+	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
 	mysqlDB.SetConnMaxLifetime(time.Hour)
+
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
 
 	for i, _ := range request.TodoList {
@@ -79,8 +82,11 @@ func UpdateTodos(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	mysqlDB.SetMaxIdleConns(10)
-	mysqlDB.SetMaxOpenConns(100)
+
+	defer mysqlDB.Close()
+
+	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
+	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
 	mysqlDB.SetConnMaxLifetime(time.Hour)
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
 
@@ -109,8 +115,11 @@ func DeleteTodos(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	mysqlDB.SetMaxIdleConns(10)
-	mysqlDB.SetMaxOpenConns(100)
+
+	defer mysqlDB.Close()
+
+	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
+	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
 	mysqlDB.SetConnMaxLifetime(time.Hour)
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
 
@@ -142,8 +151,12 @@ func QueryTodos(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	mysqlDB.SetMaxIdleConns(10)
-	mysqlDB.SetMaxOpenConns(100)
+
+	defer mysqlDB.Close()
+
+	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
+	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
+
 	mysqlDB.SetConnMaxLifetime(time.Hour)
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
 

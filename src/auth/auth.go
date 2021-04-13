@@ -104,6 +104,7 @@ func GoogleLoginCallback(c echo.Context) error {
 	}
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&User{})
 
+
 	var checkUser User
 	result := db.Where(User{Email: authUser.Email}).First(&checkUser)
 
@@ -147,9 +148,10 @@ func Login(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer mysqlDB.Close()
 
-	mysqlDB.SetMaxIdleConns(10)
-	mysqlDB.SetMaxOpenConns(100)
+	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
+	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
 	mysqlDB.SetConnMaxLifetime(time.Hour)
 
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&User{})
@@ -199,8 +201,10 @@ func SignUp(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	mysqlDB.SetMaxIdleConns(10)
-	mysqlDB.SetMaxOpenConns(100)
+	defer mysqlDB.Close()
+
+	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
+	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
 	mysqlDB.SetConnMaxLifetime(time.Hour)
 
 	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&(User{}))
