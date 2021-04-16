@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+	"todo/src/database"
+	"todo/src/models"
 	"todo/src/setting"
 
 	"github.com/dgrijalva/jwt-go"
@@ -25,20 +27,13 @@ type JwtClaims struct {
 	jwt.StandardClaims
 }
 
-type User struct {
-	gorm.Model
-	UserId   string `gorm:"primaryKey;unique"`
-	Password string
-	Email    string
-}
-
 var OauthConf *oauth2.Config
 var OauthSignUpConf *oauth2.Config
 
 func init() {
 	fmt.Println("init")
 	OauthSignUpConf = &oauth2.Config{
-		ClientID:     "173533637091-9qk1vidiui0j9gk4v7iruecfls1el250.apps.googleusercontent.com",
+		ClientID:     "173533637091-9qk1vidiui0j9gk4v7iruecfls1el250.apps.googlemodels.Usercontent.com",
 		ClientSecret: "gwyuKtyndIzwhCydmhp1cPn9",
 		RedirectURL:  "http://localhost:1323/signup/google/callback",
 		Scopes: []string{
@@ -91,7 +86,7 @@ func GoogleLoginCallback(c echo.Context) error {
 		return err
 	}
 
-	var authUser User
+	var authUser models.User
 	json.Unmarshal(userInfo, &authUser)
 
 	fmt.Println(authUser.Email)
@@ -102,11 +97,10 @@ func GoogleLoginCallback(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&User{})
+	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&models.User{})
 
-
-	var checkUser User
-	result := db.Where(User{Email: authUser.Email}).First(&checkUser)
+	var checkUser models.User
+	result := db.Where(models.User{Email: authUser.Email}).First(&checkUser)
 
 	if result.RowsAffected <= 0 {
 		return c.String(http.StatusUnauthorized, "invalid auth\n")
@@ -138,26 +132,13 @@ func Login(c echo.Context) error {
 	fmt.Println("userid", userid)
 	fmt.Println("password", password)
 
-	db, err := gorm.Open(mysql.Open(setting.MYSQL_INFO), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
+	manager, err := database.New("manager")
 	if err != nil {
 		return err
 	}
-	mysqlDB, err := db.DB()
-	if err != nil {
-		return err
-	}
-	defer mysqlDB.Close()
 
-	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
-	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
-	mysqlDB.SetConnMaxLifetime(time.Hour)
-
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&User{})
-
-	var checkUser User
-	result := db.Where(User{UserId: userid}).First(&checkUser)
+	var checkUser models.User
+	result := manager.DBMS.Where(models.User{UserId: userid}).First(&checkUser)
 
 	if result.RowsAffected <= 0 || checkUser.Password != password {
 		return c.String(http.StatusUnauthorized, "invalid auth\n")
@@ -190,31 +171,17 @@ func SignUp(c echo.Context) error {
 		return c.String(http.StatusOK, "incorrect format")
 	}
 
-	db, err := gorm.Open(mysql.Open(setting.MYSQL_INFO), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
+	manager, err := database.New("manager")
 	if err != nil {
 		return err
 	}
 
-	mysqlDB, err := db.DB()
-	if err != nil {
-		return err
-	}
-	defer mysqlDB.Close()
-
-	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
-	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
-	mysqlDB.SetConnMaxLifetime(time.Hour)
-
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&(User{}))
-
-	user := &User{
+	user := &models.User{
 		UserId:   userid,
 		Password: password,
 	}
 
-	result := db.Create(user)
+	result := manager.DBMS.Create(user)
 
 	if result.Error != nil {
 		return c.String(http.StatusOK, result.Error.Error())
@@ -252,27 +219,24 @@ func GoogleSignUpCallback(c echo.Context) error {
 		return err
 	}
 
-	var authUser User
+	var authUser models.User
 	json.Unmarshal(userInfo, &authUser)
 
 	fmt.Println(authUser.Email)
 
-	db, err := gorm.Open(mysql.Open(setting.MYSQL_INFO), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
+	manager, err := database.New("manager")
 	if err != nil {
 		return err
 	}
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&(User{}))
 
 	fmt.Println(c.QueryParam("userid"))
 
-	user := &User{
+	user := &models.User{
 		UserId: c.QueryParam("userid"),
 		Email:  authUser.Email,
 	}
 
-	result := db.Updates(user)
+	result := manager.DBMS.Updates(user)
 
 	if result.Error != nil {
 		return c.String(http.StatusOK, result.Error.Error())

@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"todo/src/auth"
+	_ "todo/src/models"
 	"todo/src/todo"
 
 	"github.com/labstack/echo/v4"
@@ -71,4 +72,5 @@ func main() {
 	}
 
 	e.Logger.Fatal(e.Start(":1323"))
+
 }

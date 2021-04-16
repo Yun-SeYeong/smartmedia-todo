@@ -3,58 +3,29 @@ package todo
 import (
 	"encoding/json"
 	"net/http"
-	"time"
-	"todo/src/setting"
+	"todo/src/database"
+	"todo/src/models"
 
 	"github.com/labstack/echo/v4"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
-type Todo struct {
-	gorm.Model
-	UserId    string    `json:"userid" gorm:"primaryKey"`
-	StartDate time.Time `json:"startdate"`
-	EndDate   time.Time `json:"enddate"`
-	Title     string    `json:"title"`
-	Status    string    `json:"status"`
-}
-
-type RequestTodo struct {
-	Version  string `json:"version"`
-	TodoList []Todo `json:"todolist"`
-}
-
 func CreateTodos(c echo.Context) error {
-	request := new(RequestTodo)
+	request := new(models.RequestTodo)
 
 	if err := c.Bind(request); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	db, err := gorm.Open(mysql.Open(setting.MYSQL_INFO), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
+	manager, err := database.New("name")
 	if err != nil {
 		return err
 	}
-	mysqlDB, err := db.DB()
-	if err != nil {
-		return err
-	}
-	defer mysqlDB.Close()
-
-	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
-	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
-	mysqlDB.SetConnMaxLifetime(time.Hour)
-
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
 
 	for i, _ := range request.TodoList {
 		request.TodoList[i].UserId = c.QueryParam("userid")
 	}
 
-	result := db.Create(request.TodoList)
+	result := manager.DBMS.Create(request.TodoList)
 
 	if result.Error != nil {
 		return c.String(http.StatusOK, result.Error.Error())
@@ -66,66 +37,40 @@ func CreateTodos(c echo.Context) error {
 }
 
 func UpdateTodos(c echo.Context) error {
-	request := new(RequestTodo)
+	request := new(models.RequestTodo)
 
 	if err := c.Bind(request); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	db, err := gorm.Open(mysql.Open(setting.MYSQL_INFO), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
+	manager, err := database.New("manager")
 	if err != nil {
 		return err
 	}
-	mysqlDB, err := db.DB()
-	if err != nil {
-		return err
-	}
-
-	defer mysqlDB.Close()
-
-	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
-	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
-	mysqlDB.SetConnMaxLifetime(time.Hour)
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
 
 	for i, _ := range request.TodoList {
 		request.TodoList[i].UserId = c.QueryParam("userid")
-		db.Updates(request.TodoList[i])
+		manager.DBMS.Updates(request.TodoList[i])
 	}
 
 	return c.String(http.StatusOK, "updated")
 }
 
 func DeleteTodos(c echo.Context) error {
-	request := new(RequestTodo)
+	request := new(models.RequestTodo)
 
 	if err := c.Bind(request); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	db, err := gorm.Open(mysql.Open(setting.MYSQL_INFO), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
+	manager, err := database.New("manager")
 	if err != nil {
 		return err
 	}
-	mysqlDB, err := db.DB()
-	if err != nil {
-		return err
-	}
-
-	defer mysqlDB.Close()
-
-	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
-	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
-	mysqlDB.SetConnMaxLifetime(time.Hour)
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
 
 	for i, _ := range request.TodoList {
 		request.TodoList[i].UserId = c.QueryParam("userid")
-		db.Unscoped().Delete(request.TodoList[i])
+		manager.DBMS.Unscoped().Delete(request.TodoList[i])
 	}
 
 	return c.String(http.StatusOK, "deleted")
@@ -135,36 +80,22 @@ func QueryTodos(c echo.Context) error {
 	fromDate := c.QueryParam("from")
 	toDate := c.QueryParam("to")
 
-	request := new(RequestTodo)
+	request := new(models.RequestTodo)
 
 	if err := c.Bind(request); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	db, err := gorm.Open(mysql.Open(setting.MYSQL_INFO), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
-	if err != nil {
-		return err
-	}
-	mysqlDB, err := db.DB()
+	manager, err := database.New("manager")
 	if err != nil {
 		return err
 	}
 
-	defer mysqlDB.Close()
+	var todoList []models.Todo
 
-	mysqlDB.SetMaxIdleConns(setting.MAX_OPEN_CONNECTION)
-	mysqlDB.SetMaxOpenConns(setting.MAX_IDLE_CONNECTION)
+	manager.DBMS.Where("start_date >= ? AND start_Date <= ? and user_id = ?", fromDate, toDate, c.QueryParam("userid")).Find(&todoList)
 
-	mysqlDB.SetConnMaxLifetime(time.Hour)
-	db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&Todo{})
-
-	var todoList []Todo
-
-	db.Where("start_date >= ? AND start_Date <= ? and user_id = ?", fromDate, toDate, c.QueryParam("userid")).Find(&todoList)
-
-	return c.JSON(http.StatusOK, RequestTodo{
+	return c.JSON(http.StatusOK, models.RequestTodo{
 		Version:  "1.0",
 		TodoList: todoList,
 	})
