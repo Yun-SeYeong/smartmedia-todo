@@ -57,9 +57,10 @@ API 기능 (PostMan)
 ```json
 {
 	"info": {
-		"_postman_id": "da1b0407-a2f5-43a7-8b49-1d0d15041328",
-		"name": "todo",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"_postman_id": "19c6baaa-014a-4fe3-a218-2d95133dc50d",
+		"name": "todo Copy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "10169731"
 	},
 	"item": [
 		{
@@ -115,7 +116,7 @@ API 기능 (PostMan)
 		{
 			"name": "todo생성",
 			"request": {
-				"method": "PUT",
+				"method": "POST",
 				"header": [
 					{
 						"key": "Authorization",
@@ -148,7 +149,7 @@ API 기능 (PostMan)
 		{
 			"name": "todo수정",
 			"request": {
-				"method": "PATCH",
+				"method": "PUT",
 				"header": [
 					{
 						"key": "Authorization",
@@ -279,5 +280,6 @@ API 기능 (PostMan)
 		}
 	]
 }
+
 ```
 
